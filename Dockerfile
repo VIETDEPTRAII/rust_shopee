@@ -7,8 +7,9 @@ RUN apt-get update && apt-get install -y netcat-traditional && rm -rf /var/lib/a
 # Set working directory
 WORKDIR /usr/src/app
 
-# Install cargo-watch for hot reloading
+# Install development tools
 RUN cargo install cargo-watch
+RUN cargo install sqlx-cli --no-default-features --features mysql
 
 # Copy project files
 COPY . .
