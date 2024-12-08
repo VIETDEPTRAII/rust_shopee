@@ -1,40 +1,18 @@
 mod models;
 mod controllers;
 mod config;
+mod middlewares;
+use crate::middlewares::auth::AuthMiddleware;
+use crate::config::db::{AppState, connect_to_database};
 
 use actix_web::{web, App, HttpServer, middleware::Logger};
-use sqlx::mysql::MySqlPool;
 use env_logger::Env;
-use std::{time::Duration, thread};
-
-pub struct AppState {
-    db: MySqlPool,
-}
-
-async fn connect_to_database(database_url: &str) -> Result<MySqlPool, sqlx::Error> {
-    let mut retries = 5;
-    let mut last_error = None;
-
-    while retries > 0 {
-        match MySqlPool::connect(database_url).await {
-            Ok(pool) => return Ok(pool),
-            Err(e) => {
-                println!("Failed to connect to database, retrying... ({} attempts left)", retries);
-                last_error = Some(e);
-                retries -= 1;
-                thread::sleep(Duration::from_secs(2));
-            }
-        }
-    }
-
-    Err(last_error.unwrap())
-}
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     dotenv::dotenv().ok();
     env_logger::init_from_env(Env::default().default_filter_or("info"));
-    
+
     let database_url = std::env::var("DATABASE_URL")
         .expect("DATABASE_URL must be set");
     
@@ -53,7 +31,13 @@ async fn main() -> std::io::Result<()> {
             }))
             .service(
                 web::scope("/api")
-                    .service(controllers::shop::get_shop_info)
+                    .service(controllers::shop::signup)
+                    .service(controllers::shop::login)
+                    .service(
+                        web::scope("")
+                            .wrap(AuthMiddleware)
+                            .service(controllers::shop::get_current_shop)
+                    )
             )
     })
     .bind(("0.0.0.0", 8080))?

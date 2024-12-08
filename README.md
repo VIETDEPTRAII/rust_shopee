@@ -121,6 +121,104 @@ The project uses three Docker volumes:
    - Check migration files in `migrations/` directory
    - Review database logs: `docker-compose logs db`
 
+## API Documentation
+
+### Shop Endpoints
+
+#### 1. Signup
+- **URL**: `/shops/signup`
+- **Method**: `POST`
+- **Request Body**:
+  ```json
+  {
+    "name": "Shop Name",
+    "email": "shop@example.com",
+    "password": "your_password"
+  }
+  ```
+- **Success Response**:
+  - **Code**: 201 Created
+  - **Content**: Shop object
+- **Error Responses**:
+  - **Code**: 400 Bad Request
+    ```json
+    {
+      "message": "Email already exists"
+    }
+    ```
+  - **Code**: 400 Bad Request
+    ```json
+    {
+      "errors": "Validation errors"
+    }
+    ```
+  - **Code**: 500 Internal Server Error
+    ```json
+    {
+      "message": "Failed to create shop"
+    }
+    ```
+
+#### 2. Login
+- **URL**: `/shops/login`
+- **Method**: `POST`
+- **Request Body**:
+  ```json
+  {
+    "email": "shop@example.com",
+    "password": "your_password"
+  }
+  ```
+- **Success Response**:
+  - **Code**: 200 OK
+  - **Content**:
+    ```json
+    {
+      "token": "your_jwt_token"
+    }
+    ```
+- **Error Responses**:
+  - **Code**: 401 Unauthorized
+    ```json
+    {
+      "message": "Invalid credentials"
+    }
+    ```
+  - **Code**: 500 Internal Server Error
+    ```json
+    {
+      "message": "Internal server error"
+    }
+    ```
+
+#### 3. Get Current Shop
+- **URL**: `/shops/me`
+- **Method**: `GET`
+- **Headers**:
+  - Required: `Authorization: Bearer <your_jwt_token>`
+- **Success Response**:
+  - **Code**: 200 OK
+  - **Content**: Shop object
+- **Error Responses**:
+  - **Code**: 401 Unauthorized
+    ```json
+    {
+      "message": "Invalid token"
+    }
+    ```
+  - **Code**: 404 Not Found
+    ```json
+    {
+      "message": "Shop not found"
+    }
+    ```
+  - **Code**: 500 Internal Server Error
+    ```json
+    {
+      "message": "Internal server error"
+    }
+    ```
+
 ## Contributing
 
 1. Fork the repository
