@@ -1,10 +1,25 @@
 use sqlx::mysql::MySqlPool;
-use anyhow::Result;
+use std::{time::Duration, thread};
 
-pub async fn connect_db() -> Result<MySqlPool> {
-    let database_url = std::env::var("DATABASE_URL")
-        .expect("DATABASE_URL must be set");
-    
-    let pool = MySqlPool::connect(&database_url).await?;
-    Ok(pool)
+pub struct AppState {
+    pub db: MySqlPool,
+}
+
+pub async fn connect_to_database(database_url: &str) -> Result<MySqlPool, sqlx::Error> {
+    let mut retries = 5;
+    let mut last_error = None;
+
+    while retries > 0 {
+        match MySqlPool::connect(database_url).await {
+            Ok(pool) => return Ok(pool),
+            Err(e) => {
+                println!("Failed to connect to database, retrying... ({} attempts left)", retries);
+                last_error = Some(e);
+                retries -= 1;
+                thread::sleep(Duration::from_secs(2));
+            }
+        }
+    }
+
+    Err(last_error.unwrap())
 }
